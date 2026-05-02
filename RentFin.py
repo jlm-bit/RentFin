@@ -29,7 +29,7 @@ st.markdown("""
     .subtitle { 
         text-align: left; 
         color: #64748b; 
-        margin-bottom: 2rem; 
+        margin-bottom: 1.5rem; 
         font-size: 0.9rem;
         text-transform: uppercase;
         letter-spacing: 1.5px;
@@ -44,6 +44,36 @@ st.markdown("""
         text-align: left;
     }
     
+    /* RESUMEN COMPACTO */
+    .summary-bar {
+        background: #f8fafc;
+        padding: 10px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        border: 1px solid #e2e8f0;
+    }
+
+    .summary-item {
+        text-align: center;
+    }
+
+    .summary-label {
+        color: #94a3b8;
+        font-size: 0.6rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: -2px;
+    }
+
+    .summary-value {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #334155;
+    }
+
     .label { 
         color: #64748b; 
         font-size: 0.7rem; 
@@ -68,7 +98,7 @@ st.markdown("""
         background-color: #f1f5f9;
         border-right: 1px solid #e2e8f0;
     }
-    /* Estilo para comprimir los inputs numéricos */
+    
     .stNumberInput div div input {
         padding-top: 2px !important;
         padding-bottom: 2px !important;
@@ -123,13 +153,14 @@ with st.sidebar:
         ren = st.number_input("Renta mensual (€)", value=0.0, step=100.0)
         dif = st.number_input("Años diferimiento", min_value=0, max_value=20, value=0, step=1)
     
-    with st.expander("📈 Hipotesis", expanded=False):
+    with st.expander("📈 Modificar Hipotesis", expanded=False):
         tasa = st.slider("Rentabilidad (%)", 0.0, 10.0, 4.0, step=0.25)
-        inf = st.slider("Inflación (%)", 0.0, 5.0, 2.0, step=0.25) / 100
+        inf_val = st.slider("Inflación (%)", 0.0, 5.0, 2.0, step=0.25)
+        inf = inf_val / 100
         rev_val = st.slider("Reval. Renta (%)", 0.0, 5.0, 0.0, step=0.25)
         rev = rev_val / 100
     
-    with st.expander("🔍 Visualización", expanded=False):
+    with st.expander("🔍 Modificar Año de Detalle", expanded=False):
         años_max = 30 
         año_objetivo = st.slider("Año de detalle:", 1, años_max, 20)
 
@@ -142,9 +173,21 @@ if cap == 0 and ren == 0:
 else:
     ext_txt = f"{int(ext)} años y {int((ext-int(ext))*12)} meses" if ext != float('inf') else "Perpetuo"
 
-# --- 5. INTERFAZ ---
+# --- 5. INTERFAZ PRINCIPAL ---
 st.markdown('<h1 class="main-title">Rentas financieras <span style="color:#2563eb">Pro</span></h1>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Simulación de Disposición de tu Plan de Pensiones (Rentas Financieras) </p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Simulación de Disposición de tu Plan de Pensiones</p>', unsafe_allow_html=True)
+
+# RESUMEN DE DATOS DEL SIDEBAR (MÁS PEQUEÑO)
+st.markdown(f"""
+    <div class="summary-bar">
+        <div class="summary-item"><p class="summary-label">Capital</p><p class="summary-value">{cap:,.0f} €</p></div>
+        <div class="summary-item"><p class="summary-label">Renta</p><p class="summary-value">{ren:,.0f} €/m</p></div>
+        <div class="summary-item"><p class="summary-label">Espera</p><p class="summary-value">{dif} años</p></div>
+        <div class="summary-item"><p class="summary-label">Rend.</p><p class="summary-value">{tasa}%</p></div>
+        <div class="summary-item"><p class="summary-label">IPC</p><p class="summary-value">{inf_val}%</p></div>
+        <div class="summary-item"><p class="summary-label">Reval.</p><p class="summary-value">{rev_val}%</p></div>
+    </div>
+""", unsafe_allow_html=True)
 
 c1, c2, c3 = st.columns(3)
 with c1:
