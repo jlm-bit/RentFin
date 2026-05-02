@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 # --- 1. CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Rentas Financieras Pro", layout="wide")
 
-# Estética Profesional Refinada (Versión Anterior Optimizada)
+# Estética Profesional Refinada
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
@@ -68,51 +68,74 @@ st.markdown("""
         background-color: #f1f5f9;
         border-right: 1px solid #e2e8f0;
     }
+    /* Estilo para comprimir los inputs numéricos */
+    .stNumberInput div div input {
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
 # --- 2. MOTOR DE CÁLCULO ---
-def calcular_simulacion(principal, renta_m, tasa_a, reval, infla, años):
+def calcular_simulacion(principal, renta_m, tasa_a, reval, infla, años, diferimiento):
     nominal, real, rentas = [principal], [principal], []
     tasa = tasa_a / 100
     renta_act = renta_m * 12
+    
     for t in range(1, años + 1):
         intereses = nominal[-1] * tasa
-        nuevo_saldo = max(0, nominal[-1] + intereses - renta_act)
+        pago_renta = 0 if t <= diferimiento else renta_act
+        
+        nuevo_saldo = max(0, nominal[-1] + intereses - pago_renta)
         nominal.append(nuevo_saldo)
-        rentas.append(renta_act)
-        renta_act *= (1 + reval)
+        rentas.append(pago_renta)
+        
+        if t > diferimiento:
+            renta_act *= (1 + reval)
+            
         real.append(nuevo_saldo / ((1 + infla) ** t))
     return nominal, real, rentas
 
-def buscar_extincion(principal, renta_m, tasa_a, reval):
-    if principal <= 0 or renta_m <= 0: return 0
+def buscar_extincion(principal, renta_m, tasa_a, reval, diferimiento):
+    if principal <= 0: return 0
+    if renta_m <= 0: return float('inf')
+    
     s, r, t = principal, renta_m * 12, tasa_a / 100
+    mes_inicio_cobro = diferimiento * 12
+    
     for mes in range(1, 1201):
-        if mes % 12 == 1 and mes > 1: r *= (1 + reval)
-        s = (s * (1 + t/12)) - (r/12)
+        interes_mes = s * (t/12)
+        pago_mes = 0 if mes <= mes_inicio_cobro else (r/12)
+        s = s + interes_mes - pago_mes
+        
+        if mes > mes_inicio_cobro and mes % 12 == 0:
+            r *= (1 + reval)
+            
         if s <= 0: return mes / 12
     return float('inf')
 
-# --- 3. SIDEBAR (Valores iniciales en 0) ---
+# --- 3. SIDEBAR COMPRIMIDO ---
 with st.sidebar:
-    st.markdown("### ⚙️ Tu Plan de Pensiones")
-    cap = st.number_input("Derechos Consolidados (Saldo) (€)", value=0.0, step=1000.0)
-    ren = st.number_input("Renta Bruta Mensual (€)", value=0.0, step=100.0)
+    st.markdown("### ⚙️ Configuración")
     
-    st.markdown("---")
-    rev_val = st.slider("Revaloración Renta Anual (%)", 0.0, 5.0, 0.0, step=0.25)
-    rev = rev_val / 100
-    tasa = st.slider("Rentabilidad Estimada PPE (%)", 0.0, 10.0, 4.0, step=0.25)
-    inf = st.slider("Inflación (IPC Estimado) (%)", 0.0, 5.0, 2.0, step=0.25) / 100
+    with st.expander("💰 Capital y Rentas", expanded=True):
+        cap = st.number_input("Saldo inicial (€)", value=0.0, step=1000.0)
+        ren = st.number_input("Renta mensual (€)", value=0.0, step=100.0)
+        dif = st.number_input("Años diferimiento", min_value=0, max_value=20, value=0, step=1)
     
-    st.markdown("---")
-    años_max = 30 
-    año_objetivo = st.slider("Ver saldo en el año:", 1, años_max, 20)
+    with st.expander("📈 Hipotesis", expanded=False):
+        tasa = st.slider("Rentabilidad (%)", 0.0, 10.0, 4.0, step=0.25)
+        inf = st.slider("Inflación (%)", 0.0, 5.0, 2.0, step=0.25) / 100
+        rev_val = st.slider("Reval. Renta (%)", 0.0, 5.0, 0.0, step=0.25)
+        rev = rev_val / 100
+    
+    with st.expander("🔍 Visualización", expanded=False):
+        años_max = 30 
+        año_objetivo = st.slider("Año de detalle:", 1, años_max, 20)
 
 # --- 4. CÁLCULOS ---
-nom, real, _ = calcular_simulacion(cap, ren, tasa, rev, inf, años_max)
-ext = buscar_extincion(cap, ren, tasa, rev)
+nom, real, _ = calcular_simulacion(cap, ren, tasa, rev, inf, años_max, dif)
+ext = buscar_extincion(cap, ren, tasa, rev, dif)
 
 if cap == 0 and ren == 0:
     ext_txt = "0 años"
@@ -141,29 +164,29 @@ with col_viz:
     años_x = list(range(años_max + 1))
     
     fig.add_trace(go.Scatter(
-        x=años_x, y=nom, 
-        name="Saldo Nominal", 
+        x=años_x, y=nom, name="Saldo Nominal", 
         line=dict(width=3, color='#1e293b'),
         hovertemplate='%{y:,.0f} €'
     ))
     
     fig.add_trace(go.Scatter(
-        x=años_x, y=real, 
-        name="Poder Real (Ajustado IPC)", 
-        fill='tozeroy', 
-        fillcolor='rgba(16, 185, 129, 0.05)',
+        x=años_x, y=real, name="Poder Real (Ajustado IPC)", 
+        fill='tozeroy', fillcolor='rgba(16, 185, 129, 0.05)',
         line=dict(width=2, color='#10b981', dash='dot'),
         hovertemplate='%{y:,.0f} €'
     ))
     
+    if dif > 0:
+        fig.add_vrect(
+            x0=0, x1=dif, fillcolor="#f1f5f9", opacity=0.5, layer="below", line_width=0,
+            annotation_text="Diferimiento", annotation_position="top left"
+        )
+    
     fig.add_vline(x=año_objetivo, line_dash="dash", line_color="#cbd5e1")
     
     fig.update_layout(
-        hovermode="x unified", 
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        height=400, 
-        margin=dict(l=0, r=0, t=10, b=0), 
+        hovermode="x unified", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+        height=400, margin=dict(l=0, r=0, t=10, b=0), 
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         xaxis=dict(showgrid=True, gridcolor='#f1f5f9', title="Años"),
         yaxis=dict(showgrid=True, gridcolor='#f1f5f9', tickformat=",.0f", title="Capital (€)")
@@ -172,23 +195,17 @@ with col_viz:
 
 with col_data:
     st.markdown(f"#### Escenarios al Año {año_objetivo}")
-    
     variaciones = [-1.0, -0.5, 0, 0.5, 1.0]
     tabla_datos = []
     for v in variaciones:
         t_v = tasa + v
         if t_v < 0: continue
-        n_v, r_v, _ = calcular_simulacion(cap, ren, t_v, rev, inf, años_max)
-        ex_v = buscar_extincion(cap, ren, t_v, rev)
-        
-        if cap == 0 and ren == 0: dur = "0a"
-        else: dur = f"{int(ex_v)}a" if ex_v != float('inf') else "Perp."
-            
+        n_v, r_v, _ = calcular_simulacion(cap, ren, t_v, rev, inf, años_max, dif)
+        ex_v = buscar_extincion(cap, ren, t_v, rev, dif)
+        dur = f"{int(ex_v)}a" if ex_v != float('inf') else "Perp."
         tabla_datos.append({
-            "Rend.": f"{t_v:.1f}%", 
-            "Duración": dur,
-            "Nominal": f"{n_v[año_objetivo]:,.0f} €", 
-            "Real": f"{r_v[año_objetivo]:,.0f} €"
+            "Rend.": f"{t_v:.1f}%", "Duración": dur,
+            "Nominal": f"{n_v[año_objetivo]:,.0f} €", "Real": f"{r_v[año_objetivo]:,.0f} €"
         })
 
     st.dataframe(pd.DataFrame(tabla_datos), use_container_width=True, hide_index=True)
