@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
-# --- 1. CONFIGURACIÓN DE PÁGINA ---
-st.set_page_config(page_title="Rentas Financieras Pro", layout="wide")
- 
-# Estética Profesional Refinada
+# --- 1. PAGE CONFIGURATION ---
+st.set_page_config(page_title="Pro Financial Annuities", layout="wide")
+
+# Refined Professional Aesthetics
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
@@ -44,7 +44,7 @@ st.markdown("""
         text-align: left;
     }
     
-    /* RESUMEN COMPACTO */
+    /* COMPACT SUMMARY BAR */
     .summary-bar {
         background: #f8fafc;
         padding: 10px 20px;
@@ -106,7 +106,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 2. MOTOR DE CÁLCULO ---
+# --- 2. CALCULATION ENGINE ---
 def calcular_simulacion(principal, renta_m, tasa_a, reval, infla, años, diferimiento):
     nominal, real, rentas = [principal], [principal], []
     tasa = tasa_a / 100
@@ -144,76 +144,76 @@ def buscar_extincion(principal, renta_m, tasa_a, reval, diferimiento):
         if s <= 0: return mes / 12
     return float('inf')
 
-# --- 3. SIDEBAR COMPRIMIDO ---
+# --- 3. COMPRESSED SIDEBAR ---
 with st.sidebar:
-    st.markdown("### ⚙️ Configuración")
+    st.markdown("### ⚙️ Settings")
     
-    with st.expander("💰 Capital y Rentas", expanded=True):
-        cap = st.number_input("Saldo inicial (€)", value=0.0, step=1000.0)
-        ren = st.number_input("Renta mensual (€)", value=0.0, step=100.0)
-        dif = st.number_input("Años diferimiento", min_value=0, max_value=20, value=0, step=1)
+    with st.expander("💰 Capital & Income", expanded=True):
+        cap = st.number_input("Initial Balance (€)", value=0.0, step=1000.0)
+        ren = st.number_input("Monthly Income (€)", value=0.0, step=100.0)
+        dif = st.number_input("Deferment Years", min_value=0, max_value=20, value=0, step=1)
     
-    with st.expander("📈 Modificar Hipotesis", expanded=False):
-        tasa = st.slider("Rentabilidad (%)", 0.0, 10.0, 4.0, step=0.25)
-        inf_val = st.slider("Inflación (%)", 0.0, 5.0, 2.0, step=0.25)
+    with st.expander("📈 Adjust Hypotheses", expanded=False):
+        tasa = st.slider("Return Rate (%)", 0.0, 10.0, 4.0, step=0.25)
+        inf_val = st.slider("Inflation (%)", 0.0, 5.0, 2.0, step=0.25)
         inf = inf_val / 100
-        rev_val = st.slider("Reval. Renta (%)", 0.0, 5.0, 0.0, step=0.25)
+        rev_val = st.slider("Income Reval. (%)", 0.0, 5.0, 0.0, step=0.25)
         rev = rev_val / 100
     
-    with st.expander("🔍 Modificar Año de Detalle", expanded=False):
+    with st.expander("🔍 Target Year Detail", expanded=False):
         años_max = 30 
-        año_objetivo = st.slider("Año de detalle:", 1, años_max, 20)
+        año_objetivo = st.slider("Selected Year:", 1, años_max, 20)
 
-# --- 4. CÁLCULOS ---
+# --- 4. CALCULATIONS ---
 nom, real, _ = calcular_simulacion(cap, ren, tasa, rev, inf, años_max, dif)
 ext = buscar_extincion(cap, ren, tasa, rev, dif)
 
 if cap == 0 and ren == 0:
-    ext_txt = "0 años"
+    ext_txt = "0 years"
 else:
-    ext_txt = f"{int(ext)} años y {int((ext-int(ext))*12)} meses" if ext != float('inf') else "Perpetuo"
+    ext_txt = f"{int(ext)} years and {int((ext-int(ext))*12)} months" if ext != float('inf') else "Perpetual"
 
-# --- 5. INTERFAZ PRINCIPAL ---
-st.markdown('<h1 class="main-title">Rentas financieras <span style="color:#2563eb">Pro</span></h1>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Simulación de Disposición de tu Plan de Pensiones</p>', unsafe_allow_html=True)
+# --- 5. MAIN INTERFACE ---
+st.markdown('<h1 class="main-title">Financial Annuities <span style="color:#2563eb">Pro</span></h1>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Pension Plan Drawdown Simulation</p>', unsafe_allow_html=True)
 
-# RESUMEN DE DATOS DEL SIDEBAR (MÁS PEQUEÑO)
+# SIDEBAR DATA SUMMARY (COMPACT)
 st.markdown(f"""
     <div class="summary-bar">
         <div class="summary-item"><p class="summary-label">Capital</p><p class="summary-value">{cap:,.0f} €</p></div>
-        <div class="summary-item"><p class="summary-label">Renta</p><p class="summary-value">{ren:,.0f} €/m</p></div>
-        <div class="summary-item"><p class="summary-label">Espera</p><p class="summary-value">{dif} años</p></div>
-        <div class="summary-item"><p class="summary-label">Rend.</p><p class="summary-value">{tasa}%</p></div>
-        <div class="summary-item"><p class="summary-label">IPC</p><p class="summary-value">{inf_val}%</p></div>
+        <div class="summary-item"><p class="summary-label">Income</p><p class="summary-value">{ren:,.0f} €/m</p></div>
+        <div class="summary-item"><p class="summary-label">Waiting</p><p class="summary-value">{dif} years</p></div>
+        <div class="summary-item"><p class="summary-label">Return</p><p class="summary-value">{tasa}%</p></div>
+        <div class="summary-item"><p class="summary-label">CPI</p><p class="summary-value">{inf_val}%</p></div>
         <div class="summary-item"><p class="summary-label">Reval.</p><p class="summary-value">{rev_val}%</p></div>
     </div>
 """, unsafe_allow_html=True)
 
 c1, c2, c3 = st.columns(3)
 with c1:
-    st.markdown(f'<div class="metric-card"><span class="label">Extinción del Capital</span><span class="value red-v">{ext_txt}</span></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="metric-card"><span class="label">Capital Depletion</span><span class="value red-v">{ext_txt}</span></div>', unsafe_allow_html=True)
 with c2:
-    st.markdown(f'<div class="metric-card"><span class="label">Saldo Nominal (Año {año_objetivo})</span><span class="value blue-v">{nom[año_objetivo]:,.0f} €</span></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="metric-card"><span class="label">Nominal Balance (Year {año_objetivo})</span><span class="value blue-v">{nom[año_objetivo]:,.0f} €</span></div>', unsafe_allow_html=True)
 with c3:
-    st.markdown(f'<div class="metric-card"><span class="label">Poder Adquisitivo (Año {año_objetivo})</span><span class="value green-v">{real[año_objetivo]:,.0f} €</span></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="metric-card"><span class="label">Purchasing Power (Year {año_objetivo})</span><span class="value green-v">{real[año_objetivo]:,.0f} €</span></div>', unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
 col_viz, col_data = st.columns([2, 1], gap="large")
 
 with col_viz:
-    st.markdown("#### Evolución del Patrimonio")
+    st.markdown("#### Portfolio Evolution")
     fig = go.Figure()
     años_x = list(range(años_max + 1))
     
     fig.add_trace(go.Scatter(
-        x=años_x, y=nom, name="Saldo Nominal", 
+        x=años_x, y=nom, name="Nominal Balance", 
         line=dict(width=3, color='#1e293b'),
         hovertemplate='%{y:,.0f} €'
     ))
     
     fig.add_trace(go.Scatter(
-        x=años_x, y=real, name="Poder Real (Ajustado IPC)", 
+        x=años_x, y=real, name="Real Value (CPI Adjusted)", 
         fill='tozeroy', fillcolor='rgba(16, 185, 129, 0.05)',
         line=dict(width=2, color='#10b981', dash='dot'),
         hovertemplate='%{y:,.0f} €'
@@ -222,7 +222,7 @@ with col_viz:
     if dif > 0:
         fig.add_vrect(
             x0=0, x1=dif, fillcolor="#f1f5f9", opacity=0.5, layer="below", line_width=0,
-            annotation_text="Diferimiento", annotation_position="top left"
+            annotation_text="Deferment", annotation_position="top left"
         )
     
     fig.add_vline(x=año_objetivo, line_dash="dash", line_color="#cbd5e1")
@@ -231,13 +231,13 @@ with col_viz:
         hovermode="x unified", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
         height=400, margin=dict(l=0, r=0, t=10, b=0), 
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        xaxis=dict(showgrid=True, gridcolor='#f1f5f9', title="Años"),
+        xaxis=dict(showgrid=True, gridcolor='#f1f5f9', title="Years"),
         yaxis=dict(showgrid=True, gridcolor='#f1f5f9', tickformat=",.0f", title="Capital (€)")
     )
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
 with col_data:
-    st.markdown(f"#### Escenarios al Año {año_objetivo}")
+    st.markdown(f"#### Scenarios at Year {año_objetivo}")
     variaciones = [-1.0, -0.5, 0, 0.5, 1.0]
     tabla_datos = []
     for v in variaciones:
@@ -245,9 +245,9 @@ with col_data:
         if t_v < 0: continue
         n_v, r_v, _ = calcular_simulacion(cap, ren, t_v, rev, inf, años_max, dif)
         ex_v = buscar_extincion(cap, ren, t_v, rev, dif)
-        dur = f"{int(ex_v)}a" if ex_v != float('inf') else "Perp."
+        dur = f"{int(ex_v)}y" if ex_v != float('inf') else "Perp."
         tabla_datos.append({
-            "Rend.": f"{t_v:.1f}%", "Duración": dur,
+            "Return": f"{t_v:.1f}%", "Duration": dur,
             "Nominal": f"{n_v[año_objetivo]:,.0f} €", "Real": f"{r_v[año_objetivo]:,.0f} €"
         })
 
@@ -255,4 +255,4 @@ with col_data:
 
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
-st.caption("Wealth Optimizer — Terminal de Análisis Patrimonial")
+st.caption("Wealth Optimizer — Wealth Analysis Terminal")
