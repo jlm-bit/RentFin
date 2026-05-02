@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 
 # --- 1. CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Rentas Financieras Pro", layout="wide")
-
+ 
 # Estética Profesional Refinada
 st.markdown("""
     <style>
