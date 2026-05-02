@@ -5,20 +5,18 @@ import plotly.graph_objects as go
 # --- 1. PAGE CONFIGURATION ---
 st.set_page_config(page_title="Pro Financial Annuities", layout="wide")
 
-# Refined Professional Aesthetics
+# Refined Professional Aesthetics (Dark Mode Compatible)
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
     
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
-        background-color: #ffffff;
     }
 
-    .stApp { background-color: #ffffff; }
-    
+    /* Titles & Subtitles */
     .main-title { 
-        color: #0f172a;
+        color: var(--text-color);
         font-weight: 800; 
         text-align: left; 
         font-size: 2.2rem; 
@@ -36,28 +34,27 @@ st.markdown("""
         font-weight: 400;
     }
 
+    /* Metric Cards adapted for Dark/Light */
     .metric-card { 
-        background: #f8fafc; 
+        background: rgba(120, 150, 180, 0.05); 
         padding: 24px; 
         border-radius: 12px; 
-        border: 1px solid #f1f5f9;
+        border: 1px solid rgba(120, 150, 180, 0.2);
         text-align: left;
     }
     
-    /* COMPACT SUMMARY BAR */
+    /* COMPACT SUMMARY BAR (Translucent for Dark Mode) */
     .summary-bar {
-        background: #f8fafc;
+        background: rgba(120, 150, 180, 0.08);
         padding: 10px 20px;
         border-radius: 8px;
         margin-bottom: 20px;
         display: flex;
         justify-content: space-between;
-        border: 1px solid #e2e8f0;
+        border: 1px solid rgba(120, 150, 180, 0.15);
     }
 
-    .summary-item {
-        text-align: center;
-    }
+    .summary-item { text-align: center; }
 
     .summary-label {
         color: #94a3b8;
@@ -71,11 +68,11 @@ st.markdown("""
     .summary-value {
         font-size: 0.95rem;
         font-weight: 600;
-        color: #334155;
+        color: var(--text-color);
     }
 
     .label { 
-        color: #64748b; 
+        color: #94a3b8; 
         font-size: 0.7rem; 
         font-weight: 600; 
         text-transform: uppercase; 
@@ -87,18 +84,14 @@ st.markdown("""
         font-weight: 700; 
         display: block; 
         margin-top: 4px; 
-        color: #1e293b;
+        color: var(--text-color);
     }
     
-    .blue-v { color: #2563eb; }
+    .blue-v { color: #3b82f6; }
     .green-v { color: #10b981; }
-    .red-v { color: #f43f5e; }
+    .red-v { color: #ef4444; }
 
-    [data-testid="stSidebar"] {
-        background-color: #f1f5f9;
-        border-right: 1px solid #e2e8f0;
-    }
-    
+    /* Number Input fix for visibility */
     .stNumberInput div div input {
         padding-top: 2px !important;
         padding-bottom: 2px !important;
@@ -174,7 +167,7 @@ else:
     ext_txt = f"{int(ext)} years and {int((ext-int(ext))*12)} months" if ext != float('inf') else "Perpetual"
 
 # --- 5. MAIN INTERFACE ---
-st.markdown('<h1 class="main-title">Financial Annuities <span style="color:#2563eb">Pro</span></h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">Financial Annuities <span style="color:#3b82f6">Pro</span></h1>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">Pension Plan Drawdown Simulation</p>', unsafe_allow_html=True)
 
 # SIDEBAR DATA SUMMARY (COMPACT)
@@ -208,31 +201,32 @@ with col_viz:
     
     fig.add_trace(go.Scatter(
         x=años_x, y=nom, name="Nominal Balance", 
-        line=dict(width=3, color='#1e293b'),
+        line=dict(width=3, color='#3b82f6'),
         hovertemplate='%{y:,.0f} €'
     ))
     
     fig.add_trace(go.Scatter(
         x=años_x, y=real, name="Real Value (CPI Adjusted)", 
-        fill='tozeroy', fillcolor='rgba(16, 185, 129, 0.05)',
+        fill='tozeroy', fillcolor='rgba(16, 185, 129, 0.1)',
         line=dict(width=2, color='#10b981', dash='dot'),
         hovertemplate='%{y:,.0f} €'
     ))
     
     if dif > 0:
         fig.add_vrect(
-            x0=0, x1=dif, fillcolor="#f1f5f9", opacity=0.5, layer="below", line_width=0,
+            x0=0, x1=dif, fillcolor="gray", opacity=0.1, layer="below", line_width=0,
             annotation_text="Deferment", annotation_position="top left"
         )
     
-    fig.add_vline(x=año_objetivo, line_dash="dash", line_color="#cbd5e1")
+    fig.add_vline(x=año_objetivo, line_dash="dash", line_color="#64748b")
     
     fig.update_layout(
+        template="plotly_dark" if st.get_option("theme.base") == "dark" else "plotly_white",
         hovermode="x unified", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
         height=400, margin=dict(l=0, r=0, t=10, b=0), 
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        xaxis=dict(showgrid=True, gridcolor='#f1f5f9', title="Years"),
-        yaxis=dict(showgrid=True, gridcolor='#f1f5f9', tickformat=",.0f", title="Capital (€)")
+        xaxis=dict(showgrid=True, gridcolor='rgba(120, 150, 180, 0.1)', title="Years"),
+        yaxis=dict(showgrid=True, gridcolor='rgba(120, 150, 180, 0.1)', tickformat=",.0f", title="Capital (€)")
     )
     st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
